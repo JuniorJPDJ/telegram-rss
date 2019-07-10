@@ -126,7 +126,3 @@ dmypy.json
 
 # Jetbrains Tools
 .idea/
-
-# Databases
-history.msgp
-tg_chats.msgp

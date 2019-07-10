@@ -5,6 +5,7 @@ import logging
 from collections import defaultdict
 from time import sleep
 from typing import Dict, List, Union
+from pathlib import Path
 
 import feedparser
 import msgpack
@@ -21,13 +22,14 @@ logger = logging.getLogger(__name__)
 history = {}
 tg_chats = {}
 config = None
+datadir = None
 
 
 def save_data():
-    with open('tg_chats.msgp', "wb") as f:
+    with open(datadir / 'tg_chats.msgp', "wb") as f:
         msgpack.pack(tg_chats, f)
 
-    with open('history.msgp', "wb") as f:
+    with open(datadir / 'history.msgp', "wb") as f:
         msgpack.pack(history, f)
 
 
@@ -122,20 +124,23 @@ def main():
     global config
     global history
     global tg_chats
+    global datadir
 
     with open("config.yml", 'r') as f:
         config = yaml.safe_load(f)
         if config is None or 'tg_bot_token' not in config:
             raise Exception("Config is not valid")
 
+    datadir = Path(config['datadir'])
+
     try:
-        with open("tg_chats.msgp", "rb") as f:
+        with open(datadir / "tg_chats.msgp", "rb") as f:
             tg_chats = msgpack.unpack(f, raw=False)
     except FileNotFoundError:
         tg_chats = {}
 
     try:
-        with open("history.msgp", "rb") as f:
+        with open(datadir / "history.msgp", "rb") as f:
             history = msgpack.unpack(f, raw=False)
     except FileNotFoundError:
         history = {}

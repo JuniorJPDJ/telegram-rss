@@ -1,0 +1,10 @@
+version: "3.5"
+
+services:
+  bot:
+    build: https://github.com/JuniorJPDJ/telegram-rss.git
+    volumes:
+      - "./data:/usr/src/telegram-rss/data"
+      - "./config.yml:/usr/src/telegram-rss/config.yml"
+    restart: unless-stopped
+    stop_grace_period: 2m
