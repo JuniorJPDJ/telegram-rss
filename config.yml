@@ -1,0 +1,7 @@
+tg_bot_token: INSERT YOUR TELEGRAM BOT TOKEN HERE
+check_interval: 60
+msg_template: |-
+  *[{feedtitle}]*
+  [{title}]({url})
+
+  {desc}
