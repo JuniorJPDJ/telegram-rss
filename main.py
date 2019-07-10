@@ -51,8 +51,9 @@ def subcmd(bot, update, args):
 
         tg_chats[url][update.effective_chat.id] = {'title': title}
         for entry in feed["entries"]:
-            if entry["id"] not in history[url]:
-                history[url].append(entry["id"])
+            id_ = entry["id"] if "id" in entry else entry['link'] if 'link' in entry else entry['title']
+            if id_ not in history[url]:
+                history[url].append(id_)
 
         update.message.reply_text('Subscribed feed "{}" - now new messsages from this feed will appear in this chat!'.format(title))
         save_data()
@@ -98,15 +99,19 @@ def download_feed(dispatcher: Dispatcher, url):
     feed = feedparser.parse(url)
 
     for entry in feed["entries"]:
-        if entry["id"] not in history[url]:
-            desc = bs4.BeautifulSoup(entry['description'], features="html.parser").get_text()
+        id_ = entry["id"] if "id" in entry else entry['link'] if 'link' in entry else entry['title']
+        if id_ not in history[url]:
+
+            desc = bs4.BeautifulSoup(entry['description'], features="html.parser").get_text() if 'description' in entry else ''
+            title = entry['title']
+            link = entry['link'] if 'link' in entry else url
             for chat in tg_chats[url]:
-                title = tg_chats[url][chat]['title']
+                feedtitle = tg_chats[url][chat]['title']
                 chat = dispatcher.bot.get_chat(chat)
 
-                msg = config['msg_template'].format(url=entry["link"], feedtitle=title, desc=desc, title=entry['title'])
+                msg = config['msg_template'].format(url=link, feedtitle=feedtitle, desc=desc, title=title)
                 chat.send_message(msg, parse_mode=telegram.ParseMode.MARKDOWN)
-            history[url].append(entry["id"])
+            history[url].append(id_)
 
 
 def feed_loop(dispatcher: Dispatcher, check_time):
