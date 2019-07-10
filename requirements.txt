@@ -1,0 +1,5 @@
+python-telegram-bot
+feedparser
+msgpack
+pyyaml
+beautifulsoup4
