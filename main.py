@@ -35,7 +35,7 @@ def save_data():
 
 def subcmd(bot, update, args):
     if not len(args):
-        update.message.reply_text("Syntax error\nSyntax: /sub URL [title]")
+        update.message.reply_text("Syntax error\nSyntax: /subscribe URL [title]")
         return
     url = args[0]
     feed = feedparser.parse(url)
@@ -78,7 +78,7 @@ def listcmd(bot, update):
 
 def unsubcmd(bot, update, args):
     if not len(args):
-        update.message.reply_text("Syntax error.\nSyntax: /unsub URL")
+        update.message.reply_text("Syntax error.\nSyntax: /unsubscribe URL")
         return
 
     chatid = update.effective_chat.id
