@@ -37,7 +37,22 @@ def subcmd(bot, update, args):
     if not len(args):
         update.message.reply_text("Syntax error\nSyntax: /subscribe URL [title]")
         return
+
+    chat = update.effective_chat.id
+    msg = update.message
+    for entity in update.message.entities:
+        parsed = msg.parse_entity(entity)
+        if args[0] == parsed:
+            if entity.type == telegram.MessageEntity.MENTION:
+                chat = bot.get_chat(parsed)
+                args = args[1:]
+                break
+            elif entity.type == telegram.MessageEntity.TEXT_MENTION:
+                chat = bot.get_chat(entity.user.id)
+                args = args[1:]
+                break
     url = args[0]
+
     feed = feedparser.parse(url)
     if "bozo_exception" in feed:
         update.message.reply_text("Error when trying to subscribe feed: {}".format(feed['bozo_exception']))
@@ -49,7 +64,7 @@ def subcmd(bot, update, args):
         else:
             title = url
 
-        tg_chats[url][update.effective_chat.id] = {'title': title}
+        tg_chats[url][chat.id] = {'title': title}
         for entry in feed["entries"]:
             id_ = entry["id"] if "id" in entry else entry['link'] if 'link' in entry else entry['title']
             if id_ not in history[url]:
@@ -59,12 +74,25 @@ def subcmd(bot, update, args):
         save_data()
 
 
-def listcmd(bot, update):
+def listcmd(bot, update, args):
+    chat = update.effective_chat
+    msg = update.message
+    for entity in update.message.entities:
+        parsed = msg.parse_entity(entity)
+        if args[0] == parsed:
+            if entity.type == telegram.MessageEntity.MENTION:
+                chat = bot.get_chat(parsed)
+                args = args[1:]
+                break
+            elif entity.type == telegram.MessageEntity.TEXT_MENTION:
+                chat = bot.get_chat(entity.user.id)
+                args = args[1:]
+                break
+
     urls = {}
-    chatid = update.effective_chat.id
     for url in tg_chats:
-        if chatid in tg_chats[url]:
-            urls[url] = tg_chats[url][chatid]["title"]
+        if chat.id in tg_chats[url]:
+            urls[url] = tg_chats[url][chat.id]["title"]
 
     if urls:
         msg = "Subscribed feeds on this chat:"
@@ -81,11 +109,24 @@ def unsubcmd(bot, update, args):
         update.message.reply_text("Syntax error.\nSyntax: /unsubscribe URL")
         return
 
-    chatid = update.effective_chat.id
+    chat = update.effective_chat
+    msg = update.message
+    for entity in update.message.entities:
+        parsed = msg.parse_entity(entity)
+        if args[0] == parsed:
+            if entity.type == telegram.MessageEntity.MENTION:
+                chat = bot.get_chat(parsed)
+                args = args[1:]
+                break
+            elif entity.type == telegram.MessageEntity.TEXT_MENTION:
+                chat = bot.get_chat(entity.user.id)
+                args = args[1:]
+                break
+
     url = args[0]
-    if url in tg_chats and chatid in tg_chats[url]:
-        title = tg_chats[url][chatid]['title']
-        del tg_chats[url][chatid]
+    if url in tg_chats and chat.id in tg_chats[url]:
+        title = tg_chats[url][chat.id]['title']
+        del tg_chats[url][chat.id]
         update.message.reply_text('Successfully unsubscribed feed with title "{}"!'.format(title))
     else:
         update.message.reply_text("No feed found")
@@ -159,7 +200,7 @@ def main():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("subscribe", subcmd, pass_args=True))
-    dp.add_handler(CommandHandler("list", listcmd))
+    dp.add_handler(CommandHandler("list", listcmd, pass_args=True))
     dp.add_handler(CommandHandler("unsubscribe", unsubcmd, pass_args=True))
     dp.add_error_handler(error)
     updater.start_polling()
