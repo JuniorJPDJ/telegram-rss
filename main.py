@@ -102,7 +102,7 @@ def download_feed(dispatcher: Dispatcher, url):
         id_ = entry["id"] if "id" in entry else entry['link'] if 'link' in entry else entry['title']
         if id_ not in history[url]:
 
-            desc = bs4.BeautifulSoup(entry['description'], features="html.parser").get_text() if 'description' in entry else ''
+            desc = " ".join(bs4.BeautifulSoup(entry['description'], features="html.parser").get_text().split()) if 'description' in entry else ''
             title = entry['title']
             link = entry['link'] if 'link' in entry else url
             for chat in tg_chats[url]:
