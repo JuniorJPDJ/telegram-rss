@@ -77,17 +77,18 @@ def subcmd(bot, update, args):
 def listcmd(bot, update, args):
     chat = update.effective_chat
     msg = update.message
-    for entity in update.message.entities:
-        parsed = msg.parse_entity(entity)
-        if args[0] == parsed:
-            if entity.type == telegram.MessageEntity.MENTION:
-                chat = bot.get_chat(parsed)
-                args = args[1:]
-                break
-            elif entity.type == telegram.MessageEntity.TEXT_MENTION:
-                chat = bot.get_chat(entity.user.id)
-                args = args[1:]
-                break
+    if len(args) > 0:
+        for entity in update.message.entities:
+            parsed = msg.parse_entity(entity)
+            if args[0] == parsed:
+                if entity.type == telegram.MessageEntity.MENTION:
+                    chat = bot.get_chat(parsed)
+                    args = args[1:]
+                    break
+                elif entity.type == telegram.MessageEntity.TEXT_MENTION:
+                    chat = bot.get_chat(entity.user.id)
+                    args = args[1:]
+                    break
 
     urls = {}
     for url in tg_chats:
