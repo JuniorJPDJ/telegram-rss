@@ -38,7 +38,7 @@ def subcmd(bot, update, args):
         update.message.reply_text("Syntax error\nSyntax: /subscribe URL [title]")
         return
 
-    chat = update.effective_chat.id
+    chat = update.effective_chat
     msg = update.message
     for entity in update.message.entities:
         parsed = msg.parse_entity(entity)
