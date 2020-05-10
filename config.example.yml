@@ -1,0 +1,26 @@
+# Telegram config
+# get both of them from my.telegram.org after registration of application
+api_hash: 0123456789abcdef0123456789abcdef
+api_id: 123456
+# get it from @BotFather on Telegram
+bot_token: 012345678:0123456789abcdef0123456789abcdef012
+
+session_name: telegram-rss-bot
+auto_reconnect: true
+retry_delay: 15
+connection_retries: -1
+request_retries: 5
+
+# RSS config
+check_interval: 300   # seconds
+
+# Bot config
+data_directory: ./data
+
+msg_template: |-
+  *[{feedtitle}]*
+  [{title}]({url})
+
+  ```
+  {desc}
+  ```
