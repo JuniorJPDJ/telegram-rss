@@ -126,3 +126,10 @@ dmypy.json
 
 # Jetbrains Tools
 .idea/
+
+# Telethon sessions
+*.session
+*.session-journal
+
+# config file
+config.yml
