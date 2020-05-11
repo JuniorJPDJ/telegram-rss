@@ -1,18 +1,46 @@
-# Telegram config
-# get both of them from my.telegram.org after registration of application
-api_hash: 0123456789abcdef0123456789abcdef
-api_id: 123456
-# get it from @BotFather on Telegram
-bot_token: 012345678:0123456789abcdef0123456789abcdef012
+# To set part of config as env var use this syntax:
+# `!env VARNAME`
+# for eg. see `bot_token`
+# if you want to specify bigger section of variables using env var you can use
+# `!yamlenv VARNAME`
+# `VARNAME` will then be parsed as YAML
 
-session_name: telegram-rss-bot
-auto_reconnect: true
-retry_delay: 15
-connection_retries: -1
-request_retries: 5
+# All time intervals need to be specified in seconds
+# If you want to specify time interval/duration
+# you can use `!time` prefix for it to be converted to seconds
+# for eg. see `max_check_interval`
+
+# This loads `TELEGRAM_RSS_CONFIG` envvar as a base config
+<<: !yamlenv TELEGRAM_RSS_CONFIG
+# everything below overwrite this
+
+# Telegram config
+# get it from @BotFather on Telegram
+# bot_token: 012345678:0123456789abcdef0123456789abcdef012
+bot_token: !env TG_BOT_TOKEN
+
+telethon_settings:
+  # you can add (or remove) any of settings from here:
+  # https://docs.telethon.dev/en/latest/modules/client.html#telethon.client.telegrambaseclient.TelegramBaseClient
+  # any not filled value will take default value from @up
+  session: telegram-rss-bot
+  auto_reconnect: true
+  retry_delay: 15
+  connection_retries: -1
+  request_retries: 5
+  # get both of them from my.telegram.org
+  # more info: https://docs.telethon.dev/en/latest/basic/signing-in.html#signing-in
+  # api_id: 123456
+  # api_hash: 0123456789abcdef0123456789abcdef
+  api_id: !env TG_API_ID
+  api_hash: !env TG_API_HASH
+
 
 # RSS config
-check_interval: 300   # seconds
+max_check_interval: !time 1d
+min_check_interval: !time 2m
+default_check_interval: !time 10m
+
 
 # Bot config
 data_directory: ./data

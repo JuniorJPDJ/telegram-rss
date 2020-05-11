@@ -1,5 +1,15 @@
-python-telegram-bot
+telethon
 feedparser
-msgpack
 pyyaml
 beautifulsoup4
+aiohttp
+tortoise-orm
+durations_nlp
+
+# db drivers
+aiosqlite
+asyncpg
+aiomysql
+
+# for importing data from previous versions
+msgpack
