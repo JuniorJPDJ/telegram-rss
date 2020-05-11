@@ -1,4 +1,5 @@
 import argparse
+import logging
 import shlex
 
 import durations_nlp
@@ -11,6 +12,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Optional, IO, Text, NoReturn, Union, Callable, ClassVar, Generator, List
     from telethon import events, types
+
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramClient(telethon.TelegramClient):
@@ -38,18 +42,28 @@ class Namespace(dict):
         return self.__getitem__(*args, **kwargs)
 
 
-class ArgParserExit(Exception):
+class ArgumentParserExit(Exception):
     pass
 
 
-class ArgParser(argparse.ArgumentParser):
+class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
-        super(ArgParser, self).__init__(*args, **kwargs)
+        super(ArgumentParser, self).__init__(*args, **kwargs)
         self._messages = []
 
     @staticmethod
-    def convert_arg_line_to_args(arg_line: 'Text'):
-        return shlex.split(arg_line)
+    def convert_arg_line_to_args(arg_line: 'Text', start: int = 0):
+        parser = shlex.shlex(arg_line[start:], )
+        parser.whitespace_split = True
+        parser.commenters = ''
+        # same behaviour as shlex.split
+
+        edges = [start]
+        args = []
+        for arg in parser:
+            edges.append(parser.instream.tell()+start)
+            args.append(arg)
+        return args, edges
 
     def _print_message(self, message: str, file: 'Optional[IO[str]]' = ...) -> None:
         # Bad workaround.
@@ -65,11 +79,19 @@ class ArgParser(argparse.ArgumentParser):
     def exit(self, status: int = 0, message: 'Optional[Text]' = None) -> 'NoReturn':
         if message:
             self._print_message(message)
-        raise ArgParserExit
+        raise ArgumentParserExit
 
 
-def command(cmd: str, argparser: 'Optional[ArgParser]' = None):
-    # TODO: User/Group/Channel tagging as an argument
+class Argument(str):
+    """
+    Simple string able to hold MessageEntity and pass it through ArgumentParser
+    """
+    def __init__(self, *args, msg_entities=None, **kwargs):
+        # super(Argument, self).__init__(*args, **kwargs)
+        self.msg_entities = list(msg_entities) if msg_entities is not None else []
+
+
+def command(cmd: str, argparser: 'Optional[ArgumentParser]' = None):
     """
     Parses command `cmd` from Telegram message using `argparser`
 
@@ -82,26 +104,44 @@ def command(cmd: str, argparser: 'Optional[ArgParser]' = None):
     :return:            function to be handled by func argument of NewMessage events
     """
     if argparser is None:
-        argparser = ArgParser()
+        argparser = ArgumentParser()
     cmd = cmd if cmd.startswith("/") else "/" + cmd
 
     def find_command(ev: 'events.NewMessage.Event'):
         me = ev.client.me
         username = None if me is None else me.username
 
-        for ent, txt in ev.message.get_entities_text():
-            if isinstance(ent, MessageEntityBotCommand) and ent.offset == 0 and \
-              (txt == cmd or (username is not None and txt.endswith(f'@{username}') and txt[:-len(username) - 1] == cmd)):
-                ev.cmd = ent
-                argparser.prog = txt        # command name setting in response messages
-                args = argparser.convert_arg_line_to_args(ev.message.message[len(txt)+1:])
-                try:
-                    ev.args = argparser.parse_args(args)
-                except ArgParserExit:
-                    # it was that command but it failed, let's show fail message and don't call cmd callback
-                    ev.client.loop.create_task(ev.reply(argparser.consume_messages()))
-                    return False
-                return True
+        try:
+            for ent, txt in ev.get_entities_text():
+                if isinstance(ent, MessageEntityBotCommand) and ent.offset == 0 and \
+                  (txt == cmd or (username is not None and txt.endswith(f'@{username}') and txt[:-len(username) - 1] == cmd)):
+                    ev.cmd = ent
+                    argparser.prog = txt        # command name setting in response messages
+
+                    args, edges = argparser.convert_arg_line_to_args(ev.message.message, len(txt)+1)
+                    args = [Argument(a) for a in args]
+
+                    # matching of MessageEntities for arguments and pushing them through ArgumentParser
+                    # THEY WILL GET LOST WHEN YOU WILL MAKE ARGPARSE CAST THEM!
+                    for entity in ev.entities:
+                        for i, edge in enumerate(edges[:-1]):
+                            if edge <= entity.offset < edges[i+1] or edge < entity.offset + entity.length < edges[i+1]:
+                                # is it valid? @up
+                                args[i].msg_entities.append(entity)
+
+                    # but they will be here even if you cast them ;)
+                    ev.raw_args = args
+
+                    try:
+                        ev.args = argparser.parse_args(args)
+                    except ArgumentParserExit:
+                        # it was that command but it failed, let's show fail message and don't call cmd callback
+                        ev.client.loop.create_task(ev.reply(argparser.consume_messages()))
+                        return False
+                    return True
+        except Exception as e:
+            ev.client.loop.create_task(ev.reply(repr(e)))
+            logger.debug('Error in parsing command', exc_info=True)
         return False
 
     return find_command

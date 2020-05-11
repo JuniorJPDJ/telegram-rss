@@ -44,6 +44,7 @@ default_check_interval: !time 10m
 
 # Bot config
 data_directory: ./data
+log_level: DEBUG
 
 msg_template: |-
   *[{feedtitle}]*
