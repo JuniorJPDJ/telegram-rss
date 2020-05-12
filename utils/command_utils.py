@@ -116,8 +116,17 @@ class CalledCommand(Command):
         # THEY WILL GET LOST WHEN YOU WILL MAKE ARGPARSE CAST THEM AND TYPE DOESN'T KNOW IT SHOULD CARE ABOUT IT!
         for entity in self.msg.entities:
             for a in args:
-                if a.start <= entity.offset <= a.end or a.start < entity.offset + entity.length < a.end:
-                    # is it valid? @up
+                entity_end = entity.offset + entity.length
+
+                # start of entity in argument
+                # end of entity in argument
+                # start of argument in entity
+                # end of argument in entity
+                if a.start <= entity.offset <= a.end \
+                    or a.start <= entity_end <= a.end \
+                    or entity.offset <= a.start <= entity_end \
+                    or entity.offset <= a.end <= entity_end \
+                :
                     a.msg_entities.append(entity)
 
         return args
