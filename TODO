@@ -1,5 +1,8 @@
 # TODO: handle bot kick as unregister all
-# TODO: handle sending too long messages (is it a case in telethon?)
+# DONE: handle sending too long messages (is it a case in telethon?)
 # TODO: only people with writing permission can add RSS to channel/group
 # TODO: inform who added RSS on channel when adding from another place
 # TODO: check feed with THE SMALLEST interval from all subs
+# DONE: type for tagged user for argparse casting/checking
+# TODO: interval type
+# TODO: try subclassing yaml loader instead of doing this weird shit

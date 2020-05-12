@@ -4,10 +4,10 @@ import shlex
 from telethon.tl.types import MessageEntityBotCommand
 from telethon.tl.custom.message import Message
 
-from typing import TYPE_CHECKING
-
 from .argumentparser import ArgumentParser, ArgumentParserExit
 from . import cut_message_and_send, Namespace
+
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional, List, Tuple, Text
@@ -24,11 +24,13 @@ class Argument(str):
     """
     def __init__(
         self, *args,
+        cmd: 'Optional[CalledCommand]' = None,
         msg_entities: 'Optional[List[TypeMessageEntity]]' = None,
         start: 'Optional[int]' = None, end: 'Optional[int]' = None,
         **kwargs
     ):
         # super(Argument, self).__init__(*args, **kwargs)
+        self.cmd = cmd
         self.msg_entities = list(msg_entities) if msg_entities is not None else []
         self.start, self.end = start, end
 
@@ -73,7 +75,7 @@ class Command(ArgumentParser):
                         return False
                     return True
         except Exception as e:
-            ev.client.loop.create_task(cut_message_and_send(ev.reply, repr(e)))
+            ev.client.loop.create_task(cut_message_and_send(ev.reply, f'{e.__class__.__name__}: {e!r}'))
             logger.debug('Error in parsing command', exc_info=True)
         return False
 
@@ -101,6 +103,7 @@ class CalledCommand(Command):
         args = []
         for arg in parser:
             _arg = Argument(arg)
+            _arg.cmd = self
             _arg.start = bounds[-1]
 
             end = parser.instream.tell() + start
