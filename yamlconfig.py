@@ -3,7 +3,8 @@ import os
 import yaml
 import yaml.resolver
 
-from utils import yaml_constructor, Namespace, parse_time_interval, YAMLRemapper
+from utils import parse_time_interval, Namespace
+from utils.config_utils import yaml_constructor, YAMLRemapper
 
 
 from typing import TYPE_CHECKING
